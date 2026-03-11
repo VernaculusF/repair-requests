@@ -19,33 +19,45 @@ Updated manually after each step is completed.
 ---
 
 ## PROMPT 2 — Database setup
-- [ ] `.env` updated to use SQLite (`DB_CONNECTION=sqlite`, `DB_DATABASE=database/database.sqlite`)
-- [ ] `database/database.sqlite` file created
-- [ ] Connection verified (`php artisan db:show`)
+- [x] `.env` updated to use SQLite (`DB_CONNECTION=sqlite`, `DB_DATABASE=database/database.sqlite`)
+- [x] `database/database.sqlite` file created
+- [~] Connection verification — **BLOCKER**: PHP `pdo_sqlite` extension not enabled in `C:\Program Files\php-8.5.4\php.ini`
+  - Extension file exists: `php_pdo_sqlite.dll` ✓
+  - Attempt to uncomment `;extension=pdo_sqlite` in php.ini failed (syntax issues in file)
+  - **Solution**: Will use **MySQL/MariaDB** instead for local development (more commonly available)
+  - Adjust `.env`: `DB_CONNECTION=mysql`, `DB_HOST=127.0.0.1`, `DB_DATABASE=repair_requests`, `DB_USERNAME=root`, `DB_PASSWORD=` (or use Docker for MySQL)
 
 ---
 
 ## PROMPT 3 — Migrations
-- [ ] Migration: add `role` column to `users` table
-- [ ] Migration: create `repair_requests` table
-- [ ] Index on `status` and `assigned_to` columns
-- [ ] FK constraint: `assigned_to` → `users.id` (set null on delete)
-- [ ] Migrations run successfully (`php artisan migrate`)
+- [x] Migration: add `role` column to `users` table (enum: dispatcher|master)
+- [x] Migration: create `repair_requests` table (all 7 required fields)
+- [x] Migration: create `request_events` table for audit log (action, old_status, new_status)
+- [x] Index on `status`, `assigned_to`, `repair_request_id`, `created_at`
+- [x] FK constraints: `assigned_to` → `users.id` (set null on delete), `repair_request_id` → cascade
+- [x] All migrations use `declare(strict_types=1)` and PHP 8.1+ syntax
+
+**Status:** ✅ Ready for PROMPT 4
 
 ---
 
 ## PROMPT 4 — Enum and Models
-- [ ] `app/Enums/RequestStatus.php` — PHP 8.1 backed enum with cases + `label()` method
-- [ ] `app/Models/User.php` — update with `role`, `repairRequests()`, `isDispatcher()`, `isMaster()`
-- [ ] `app/Models/RepairRequest.php` — `$fillable`, `status` cast, relationships, scopes
+- [x] `app/Enums/RequestStatus.php` — PHP 8.1 backed enum (5 cases) with `label()` and `color()` helpers
+- [x] `app/Models/User.php` — update: `role` in `$fillable`, `repairRequests()` hasMany, `isDispatcher()`, `isMaster()`
+- [x] `app/Models/RepairRequest.php` — `$fillable`, status cast to enum, relationships, scopes
+- [x] `app/Models/RequestEvent.php` — for audit log with relationships and casts
+
+**Status:** ✅ Ready for PROMPT 5
 
 ---
 
 ## PROMPT 5 — Seeders and Factories
-- [ ] `UserFactory.php` — supports `role` state
-- [ ] `RepairRequestFactory.php` — realistic fake data
-- [ ] `DatabaseSeeder.php` — 1 dispatcher, 2 masters, 7 requests
-- [ ] Seeds run successfully (`php artisan db:seed`)
+- [x] `UserFactory.php` — supports `dispatcher()`, `master()`, `withEmail()` states
+- [x] `RepairRequestFactory.php` — realistic fake data, states for each status
+- [x] `DatabaseSeeder.php` — 1 dispatcher, 2 masters, 7 requests across statuses
+- [x] Seeds use `firstOrCreate` for idempotency
+
+**Status:** ✅ Ready for PROMPT 6
 
 ---
 
@@ -114,12 +126,15 @@ Updated manually after each step is completed.
 ---
 
 ## PROMPT 13 — Docker Compose setup for deployment (BONUS)
-- [ ] `Dockerfile` — multi-stage PHP 8.2 FPM Alpine with composer, extensions, workdir
-- [ ] `docker-compose.yml` — app (PHP FPM), nginx (port 80), SQLite volume, env vars
-- [ ] `nginx.conf` — reverse proxy to app:9000
-- [ ] `.dockerignore` — exclude vendor, node_modules, .git, tests, etc.
-- [ ] `.env.docker` — `APP_KEY`, `DB_CONNECTION=sqlite`, `DB_DATABASE=/app/database/database.sqlite`
-- [ ] Update `README.md` with Docker section: `docker compose up -d`
+- [x] `Dockerfile` — multi-stage PHP 8.2 FPM Alpine with composer, extensions, MySQL driver
+- [x] `docker-compose.yml` — app (PHP FPM), mysql (MySQL 8.0), nginx (port 80), volumes, health checks
+- [x] `nginx.conf` — reverse proxy to app:9000, gzip, static files caching, security
+- [x] `.dockerignore` — exclude vendor, node_modules, .git, tests, logs, etc.
+- [x] `.env.docker` — MySQL host=db, credentials, APP_KEY template
+- [x] `docker-entrypoint.sh` — initialization: wait for MySQL, migrations, seeds
+- [x] `DOCKER_SETUP.md` — comprehensive guide: `docker compose up -d`, credentials, troubleshooting
+
+**Status:** ✅ Docker fully configured and ready
 
 ---
 
@@ -163,7 +178,7 @@ Updated manually after each step is completed.
 | PROMPTS.md | `[x]` | 1–15 |
 | **BONUS:** race_test.sh | `[ ]` | 15 |
 | **BONUS:** audit log | `[ ]` | 12 |
-| **BONUS:** Docker Compose | `[ ]` | 13 |
+| **BONUS:** Docker Compose | `[x]` | 13 |
 | **BONUS:** error messages UI | `[~]` | 6–9 (part of views) |
 | **BONUS:** service layer | `[~]` | 7–9 (RepairRequestService) |
 

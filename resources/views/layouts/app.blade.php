@@ -144,6 +144,7 @@
             }
         }
     </style>
+    @stack('styles')
 </head>
 <body>
     <nav>

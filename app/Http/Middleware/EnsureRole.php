@@ -6,7 +6,8 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
+use Symfony\Component\HttpFoundation\Response;
 
 class EnsureRole
 {
@@ -18,11 +19,11 @@ class EnsureRole
      */
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
-        if (!auth()->check()) {
+        if (!Auth::check()) {
             return response('Unauthorized', 401);
         }
 
-        $user = auth()->user();
+        $user = Auth::user();
 
         if (!in_array($user->role, $roles, true)) {
             return response('Forbidden', 403);

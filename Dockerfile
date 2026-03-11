@@ -8,7 +8,8 @@ RUN apk add --no-cache \
     zip \
     unzip \
     libzip-dev \
-    oniguruma-dev
+    oniguruma-dev \
+    mariadb-dev
 
 # Install PHP extensions
 RUN docker-php-ext-install \
@@ -30,10 +31,7 @@ COPY . .
 # Install PHP dependencies
 RUN composer install --no-interaction --no-dev --optimize-autoloader --ignore-platform-req=ext-fileinfo
 
-# Generate APP_KEY if not set
-RUN if [ -z "$APP_KEY" ]; then php artisan key:generate --force; fi
-
----
+# ---
 
 # Runtime stage
 FROM php:8.2-fpm-alpine
@@ -42,15 +40,12 @@ FROM php:8.2-fpm-alpine
 RUN apk add --no-cache \
     libzip \
     oniguruma \
-    mysql-client
+    mariadb-connector-c \
+    netcat-openbsd
 
-# Install PHP extensions
-RUN docker-php-ext-install \
-    pcntl \
-    zip \
-    mbstring \
-    pdo \
-    pdo_mysql
+# Copy compiled PHP extensions from builder
+COPY --from=builder /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
+COPY --from=builder /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
 
 # Copy application from builder
 COPY --from=builder /app /app
@@ -60,10 +55,12 @@ WORKDIR /app
 
 # Set permissions
 RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache
-RUN chmod -R 0755 /app/storage /app/bootstrap/cache
+RUN chmod -R 0755 /app/storage /app/bootstrap/cache \
+    && chmod +x /app/docker-entrypoint.sh
 
 # Expose port
 EXPOSE 9000
 
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
 # Start PHP-FPM
 CMD ["php-fpm"]

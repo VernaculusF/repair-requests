@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Models\RepairRequest;
 use App\Services\RepairRequestService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class RequestController extends Controller
@@ -23,7 +24,7 @@ class RequestController extends Controller
      */
     public function index(): View
     {
-        $masterId = auth()->id();
+        $masterId = Auth::id();
 
         $requests = RepairRequest::where('assigned_to', $masterId)
             ->with('events')
@@ -38,7 +39,7 @@ class RequestController extends Controller
      */
     public function take(RepairRequest $repairRequest): RedirectResponse
     {
-        $masterId = auth()->id();
+        $masterId = Auth::id();
 
         try {
             $this->service->take($repairRequest, $masterId);
@@ -56,7 +57,7 @@ class RequestController extends Controller
      */
     public function complete(RepairRequest $repairRequest): RedirectResponse
     {
-        $masterId = auth()->id();
+        $masterId = Auth::id();
 
         try {
             $this->service->complete($repairRequest, $masterId);

@@ -40,7 +40,7 @@ class RepairRequestFactory extends Factory
     /**
      * Set request to "new" status (not assigned).
      */
-    public function new(): static
+    public function asNew(): static
     {
         return $this->state(fn (array $attributes) => [
             'status' => RequestStatus::New,

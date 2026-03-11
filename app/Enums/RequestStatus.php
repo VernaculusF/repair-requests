@@ -33,4 +33,26 @@ enum RequestStatus: string
             self::Canceled => 'badge-danger',
         };
     }
+
+    public function badgeBackground(): string
+    {
+        return match($this) {
+            self::New => '#d1ecf1',
+            self::Assigned => '#fff3cd',
+            self::InProgress => '#d4edff',
+            self::Done => '#d4edda',
+            self::Canceled => '#f8d7da',
+        };
+    }
+
+    public function badgeColor(): string
+    {
+        return match($this) {
+            self::New => '#0c5460',
+            self::Assigned => '#856404',
+            self::InProgress => '#004085',
+            self::Done => '#155724',
+            self::Canceled => '#721c24',
+        };
+    }
 }

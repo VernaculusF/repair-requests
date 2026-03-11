@@ -1,5 +1,24 @@
 @extends('layouts.app')
 
+@push('styles')
+<style>
+.status-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+.status-badge--new        { background: #d1ecf1; color: #0c5460; }
+.status-badge--assigned   { background: #fff3cd; color: #856404; }
+.status-badge--in_progress { background: #d4edff; color: #004085; }
+.status-badge--done       { background: #d4edda; color: #155724; }
+.status-badge--canceled   { background: #f8d7da; color: #721c24; }
+.row-odd  { background: white; }
+.row-even { background: #f9f9f9; }
+</style>
+@endpush
+
 @section('content')
     <h1 style="margin-bottom: 1.5rem;">Dispatcher Panel</h1>
 
@@ -53,7 +72,7 @@
                 </thead>
                 <tbody>
                     @foreach ($requests as $request)
-                        <tr style="background: {{ $loop->odd ? 'white' : '#f9f9f9' }}; border: 1px solid #e0e0e0;">
+                        <tr class="{{ $loop->odd ? 'row-odd' : 'row-even' }}" style="border: 1px solid #e0e0e0;">
                             <td style="padding: 0.75rem; border: 1px solid #e0e0e0;">
                                 <strong>#{{ $request->id }}</strong>
                             </td>
@@ -70,26 +89,7 @@
                                 {{ Str::limit($request->problem_text, 40) }}
                             </td>
                             <td style="padding: 0.75rem; border: 1px solid #e0e0e0;">
-                                <span style="
-                                    display: inline-block;
-                                    padding: 0.25rem 0.75rem;
-                                    border-radius: 20px;
-                                    font-weight: 600;
-                                    background: @switch($request->status->value)
-                                        @case('new') #d1ecf1 @break
-                                        @case('assigned') #fff3cd @break
-                                        @case('in_progress') #d4edff @break
-                                        @case('done') #d4edda @break
-                                        @case('canceled') #f8d7da @break
-                                        @default #e0e0e0 @endswitch;
-                                    color: @switch($request->status->value)
-                                        @case('new') #0c5460 @break
-                                        @case('assigned') #856404 @break
-                                        @case('in_progress') #004085 @break
-                                        @case('done') #155724 @break
-                                        @case('canceled') #721c24 @break
-                                        @default #666 @endswitch;
-                                ">
+                                <span class="status-badge status-badge--{{ $request->status->value }}">
                                     {{ $request->status->label() }}
                                 </span>
                             </td>

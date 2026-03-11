@@ -11,8 +11,13 @@ echo "MySQL is up!"
 echo "Running migrations..."
 php artisan migrate --force
 
-echo "Running seeders..."
-php artisan db:seed --force
+if [ ! -f /app/storage/.seeded ]; then
+  echo "Running seeders..."
+  php artisan db:seed --force
+  touch /app/storage/.seeded
+else
+  echo "Seeders already ran, skipping."
+fi
 
 echo "Cache clearing..."
 php artisan cache:clear

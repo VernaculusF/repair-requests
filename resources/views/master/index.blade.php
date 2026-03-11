@@ -1,10 +1,27 @@
 @extends('layouts.app')
 
+@push('styles')
+<style>
+.status-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+.status-badge--new        { background: #d1ecf1; color: #0c5460; }
+.status-badge--assigned   { background: #fff3cd; color: #856404; }
+.status-badge--in_progress { background: #d4edff; color: #004085; }
+.status-badge--done       { background: #d4edda; color: #155724; }
+.status-badge--canceled   { background: #f8d7da; color: #721c24; }
+</style>
+@endpush
+
 @section('content')
     <h1 style="margin-bottom: 1.5rem;">My Repair Requests</h1>
 
     @if ($requests->count())
-        <div style="space-y: 1.5rem;">
+        <div>
             @foreach ($requests as $request)
                 <div style="
                     background: white;
@@ -41,22 +58,7 @@
 
                             <div style="margin-bottom: 1rem;">
                                 <small style="color: #999;">Status</small><br>
-                                <span style="
-                                    display: inline-block;
-                                    padding: 0.25rem 0.75rem;
-                                    border-radius: 20px;
-                                    font-weight: 600;
-                                    background: @switch($request->status->value)
-                                        @case('assigned') #fff3cd @break
-                                        @case('in_progress') #d4edff @break
-                                        @case('done') #d4edda @break
-                                        @default #e0e0e0 @endswitch;
-                                    color: @switch($request->status->value)
-                                        @case('assigned') #856404 @break
-                                        @case('in_progress') #004085 @break
-                                        @case('done') #155724 @break
-                                        @default #666 @endswitch;
-                                ">
+                                <span class="status-badge status-badge--{{ $request->status->value }}">
                                     {{ $request->status->label() }}
                                 </span>
                             </div>

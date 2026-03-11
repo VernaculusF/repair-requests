@@ -1,59 +1,192 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Repair Requests Web Application
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A Laravel 11 web application for managing repair service requests with role-based access control (dispatcher and master roles).
 
-## About Laravel
+## Features
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- **Public Request Submission**: Any user can submit a repair request without authentication
+- **Dispatcher Panel**: Dispatchers can view all requests, filter by status, assign to masters, and cancel requests
+- **Master Panel**: Masters can view requests assigned to them, accept requests, and mark them as completed
+- **Race Condition Protection**: The "Take" action uses atomic database updates to safely handle concurrent requests
+- **Audit Logging**: All actions are logged with timestamps and user information (bonus feature)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Technology Stack
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- **Framework**: Laravel 11
+- **Language**: PHP 8.2
+- **Database**: MySQL 8.0 (Docker) or SQLite (testing/local)
+- **Web Server**: Nginx (Docker) / Laravel Artisan (local)
+- **Containerization**: Docker Compose
 
-## Learning Laravel
+## Local Setup (Without Docker)
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+### Prerequisites
+- PHP 8.2+ with extensions: pdo, pdo_sqlite, mbstring, json, bcmath, fileinfo, curl
+- Composer
+- SQLite (built-in, no installation needed)
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### Installation Steps
 
-## Laravel Sponsors
+1. **Clone or download the project**
+   ```bash
+   cd repair-requests
+   ```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+2. **Install dependencies**
+   ```bash
+   composer install --ignore-platform-reqs
+   ```
 
-### Premium Partners
+3. **Configure environment**
+   ```bash
+   cp .env.example .env
+   # .env is already configured to use SQLite
+   ```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+4. **Generate application key**
+   ```bash
+   php artisan key:generate
+   ```
 
-## Contributing
+5. **Run migrations**
+   ```bash
+   php artisan migrate --seed
+   ```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+6. **Start development server**
+   ```bash
+   php artisan serve
+   ```
 
-## Code of Conduct
+   Application will be available at `http://localhost:8000`
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Docker Setup (Recommended)
 
-## Security Vulnerabilities
+See [DOCKER_SETUP.md](DOCKER_SETUP.md) for complete Docker Compose installation and usage instructions.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## Test Credentials
+
+All test users have password: **`password`**
+
+| Email | Role | Purpose |
+|-------|------|---------|
+| `dispatcher@example.com` | Dispatcher | Manage and assign requests |
+| `master1@example.com` | Master | Work on assigned requests |
+| `master2@example.com` | Master | Work on assigned requests |
+
+## Application Workflow
+
+### 1. Submit Request (Public)
+- Navigate to `/requests/create`
+- Fill in: client name, phone, address, problem description
+- System creates request with status `new`
+
+### 2. Dispatcher Assigns Request
+- Login as dispatcher@example.com
+- Go to `/dispatcher`
+- View all requests, filter by status
+- Select a master and click "Assign" to change status to `assigned`
+- Click "Cancel" to mark request as `canceled`
+
+### 3. Master Accepts and Completes
+- Login as master1@example.com or master2@example.com
+- Go to `/master`
+- Click "Accept Request" to change status from `assigned` to `in_progress`
+- Click "Mark as Complete" to change status from `in_progress` to `done`
+
+## Race Condition Testing
+
+The "Take" (Accept) action demonstrates race condition protection. When a master clicks "Accept Request", the system uses an atomic database UPDATE to ensure only one master can take the request.
+
+### Running Automated Tests
+
+```bash
+php artisan test
+```
+
+Tests use in-memory SQLite database and cover both successful submissions and race condition scenarios.
+
+### Manual Test with curl
+
+See [race_test.sh](race_test.sh) for an automated testing script, or test manually:
+
+```bash
+# Get session cookie
+curl -c cookies.txt -X POST http://localhost:8000/login \
+  -d "email=master1@example.com&password=password&_token=<CSRF_TOKEN>"
+
+# First take (should succeed)
+curl -b cookies.txt -X POST http://localhost:8000/master/requests/1/take -L
+
+# Second take (should get error)
+curl -b cookies.txt -X POST http://localhost:8000/master/requests/1/take -L
+```
+
+**Expected Result:**
+- First request: Status changes to `in_progress` (200 with success message)
+- Second request: Error "This request is already being worked on." (302 redirect with error flash)
+
+## Running Tests
+
+Tests use SQLite in-memory database for speed and isolation.
+
+```bash
+php artisan test
+```
+
+### Available Tests
+
+- `CreateRepairRequestTest`: Validation and successful submission of repair requests
+- `RaceConditionTest`: Concurrent "Take" action protection
+
+## Project Structure
+
+```
+app/
+  Enums/RequestStatus.php
+  Exceptions/RequestAlreadyTakenException.php
+  Http/Controllers/
+    Auth/LoginController.php
+    RepairRequestController.php
+    Dispatcher/RequestController.php
+    Master/RequestController.php
+  Http/Middleware/EnsureRole.php
+  Http/Requests/
+    StoreRepairRequestRequest.php
+    AssignMasterRequest.php
+  Models/
+    User.php
+    RepairRequest.php
+    RequestEvent.php
+  Services/RepairRequestService.php
+
+database/
+  migrations/
+  factories/
+  seeders/
+
+resources/views/
+  layouts/app.blade.php
+  auth/login.blade.php
+  requests/
+  dispatcher/
+  master/
+
+routes/web.php
+```
+
+## Key Design Decisions
+
+See [DECISIONS.md](DECISIONS.md) for detailed architectural decisions and rationale.
+
+## Bonus Features
+
+- ✅ Audit log system (request events with timestamps and user tracking)
+- ✅ race_test.sh script for manual race condition testing  
+- ✅ Docker Compose for production-ready deployment
+- ✅ Atomic UPDATE protection against race conditions
+- ✅ Clean git history with atomic commits per feature
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+MIT License

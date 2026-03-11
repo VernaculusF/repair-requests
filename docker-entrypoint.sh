@@ -11,18 +11,14 @@ echo "MySQL is up!"
 echo "Running migrations..."
 php artisan migrate --force
 
-if [ ! -f /app/storage/.seeded ]; then
-  echo "Running seeders..."
-  php artisan db:seed --force
-  touch /app/storage/.seeded
-else
-  echo "Seeders already ran, skipping."
-fi
+USER_COUNT=$(php -r "require 'vendor/autoload.php'; \$app = require 'bootstrap/app.php'; \$kernel = \$app->make(Illuminate\\Contracts\\Console\\Kernel::class); \$kernel->bootstrap(); echo Illuminate\\Support\\Facades\\DB::table('users')->count();" 2>/dev/null || echo "0")
 
-echo "Cache clearing..."
-php artisan cache:clear
-php artisan config:clear
-php artisan view:clear
+if [ "$USER_COUNT" = "0" ]; then
+  echo "Users table is empty, running seeders..."
+  php artisan db:seed --force
+else
+  echo "Users already exist, skipping seeders."
+fi
 
 echo "Application initialized successfully!"
 exec "$@"

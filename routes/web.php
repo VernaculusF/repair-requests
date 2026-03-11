@@ -6,7 +6,17 @@ use App\Http\Controllers\RepairRequestController;
 use App\Http\Controllers\Dispatcher\RequestController as DispatcherRequestController;
 use App\Http\Controllers\Master\RequestController as MasterRequestController;
 
-Route::redirect('/', '/requests/create');
+Route::get('/', function () {
+    if (!auth()->check()) {
+        return redirect('/login');
+    }
+
+    return match (auth()->user()->role) {
+        'dispatcher' => redirect('/dispatcher'),
+        'master' => redirect('/master'),
+        default => redirect('/login'),
+    };
+});
 
 // Authentication routes
 Route::get('/login', [LoginController::class, 'showForm'])->name('login')->middleware('guest');

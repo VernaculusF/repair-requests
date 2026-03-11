@@ -3,7 +3,7 @@
 # race_test.sh - Test the race condition protection in the "Take" action
 # 
 # This script simulates two concurrent requests to accept the same repair request.
-# One should succeed (HTTP 302 with redirect), the other should get an error.
+# One should succeed, the second should be rejected with a clear error.
 #
 # Usage:
 #   ./race_test.sh <REQUEST_ID> <SESSION_COOKIE>
@@ -19,7 +19,7 @@ set -e
 
 REQUEST_ID="${1:-1}"
 SESSION_COOKIE="${2:-}"
-BASE_URL="${BASE_URL:-http://localhost:8000}"
+BASE_URL="${BASE_URL:-http://localhost}"
 
 # Colors for output
 RED='\033[0;31m'
@@ -100,8 +100,8 @@ wait $PID2
 echo -e "${YELLOW}=== Test Complete ===${NC}"
 echo ""
 echo -e "Expected results:"
-echo -e "  ${GREEN}[Request 1] HTTP 302 or 200: Successfully took the request${NC}"
-echo -e "  ${RED}[Request 2] HTTP 302 or error message: Request already taken${NC}"
+echo -e "  ${GREEN}[Request 1] HTTP 200/302: Successfully took the request${NC}"
+echo -e "  ${RED}[Request 2] HTTP 302/409: Request already taken (or error flash)${NC}"
 echo ""
 echo "Note: Due to network timing, both requests might succeed if execution is not truly parallel."
 echo "To improve parallelism, run this script with a shorter delay:"

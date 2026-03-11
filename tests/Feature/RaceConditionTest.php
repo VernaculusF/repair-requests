@@ -92,10 +92,12 @@ class RaceConditionTest extends TestCase
     {
         $master = User::factory()->master()->create();
         $request = RepairRequest::factory()->assigned($master)->create();
+        $token = 'test-csrf-token';
 
         // First request succeeds
         $this->actingAs($master)
-            ->post("/master/requests/{$request->id}/take")
+            ->withSession(['_token' => $token])
+            ->post("/master/requests/{$request->id}/take", ['_token' => $token])
             ->assertRedirect();
 
         // Allow redirect to process
@@ -104,7 +106,8 @@ class RaceConditionTest extends TestCase
         // Second request should get 409
         $freshRequest = RepairRequest::find($request->id);
         $response = $this->actingAs($master)
-            ->post("/master/requests/{$freshRequest->id}/take");
+            ->withSession(['_token' => $token])
+            ->post("/master/requests/{$freshRequest->id}/take", ['_token' => $token]);
 
         // The response should indicate the error (either redirect with error or 409 JSON)
         $response->assertSessionHas('error');

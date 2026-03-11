@@ -25,7 +25,7 @@ class StoreRepairRequestRequest extends FormRequest
     {
         return [
             'client_name' => 'required|string|max:255',
-            'phone' => 'required|string|regex:/^\+?([0-9]{1,3})?[\s.-]?[0-9]{6,14}$/|max:20',
+            'phone' => 'required|string|regex:/^\+?[0-9()\s.-]{7,20}$/|max:20',
             'address' => 'required|string|max:500',
             'problem_text' => 'required|string|max:2000',
         ];

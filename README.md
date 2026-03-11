@@ -1,6 +1,6 @@
 # Repair Requests Web Application
 
-A Laravel 11 web application for managing repair service requests with role-based access control (dispatcher and master roles).
+A Laravel 12 web application for managing repair service requests with role-based access control (dispatcher and master roles).
 
 ## Features
 
@@ -12,7 +12,7 @@ A Laravel 11 web application for managing repair service requests with role-base
 
 ## Technology Stack
 
-- **Framework**: Laravel 11
+- **Framework**: Laravel 12
 - **Language**: PHP 8.2
 - **Database**: MySQL 8.0 (Docker) or SQLite (testing/local)
 - **Web Server**: Nginx (Docker) / Laravel Artisan (local)
@@ -112,14 +112,14 @@ See [race_test.sh](race_test.sh) for an automated testing script, or test manual
 
 ```bash
 # Get session cookie
-curl -c cookies.txt -X POST http://localhost:8000/login \
+curl -c cookies.txt -X POST http://localhost/login \
   -d "email=master1@example.com&password=password&_token=<CSRF_TOKEN>"
 
 # First take (should succeed)
-curl -b cookies.txt -X POST http://localhost:8000/master/requests/1/take -L
+curl -b cookies.txt -X POST http://localhost/master/requests/1/take -L
 
 # Second take (should get error)
-curl -b cookies.txt -X POST http://localhost:8000/master/requests/1/take -L
+curl -b cookies.txt -X POST http://localhost/master/requests/1/take -L
 ```
 
 **Expected Result:**

@@ -6,9 +6,7 @@ use App\Http\Controllers\RepairRequestController;
 use App\Http\Controllers\Dispatcher\RequestController as DispatcherRequestController;
 use App\Http\Controllers\Master\RequestController as MasterRequestController;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::redirect('/', '/requests/create');
 
 // Authentication routes
 Route::get('/login', [LoginController::class, 'showForm'])->name('login')->middleware('guest');

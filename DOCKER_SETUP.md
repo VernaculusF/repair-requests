@@ -47,8 +47,8 @@ docker compose exec app php artisan migrate --seed
 - **MySQL Database**: localhost:3306
   - Database: `repair_requests`
   - User: `laravel`
-  - Password: `password`
-  - Root password: `root`
+  - Password: `secret`
+  - Root password: `root_secret`
 
 ## Test User Credentials
 
@@ -72,7 +72,7 @@ docker compose exec db mysql -u laravel -p repair_requests
 
 ### Run tests
 ```bash
-docker compose exec app php artisan test
+docker compose exec app php vendor/bin/phpunit tests/Feature
 ```
 
 ### Run seeders only

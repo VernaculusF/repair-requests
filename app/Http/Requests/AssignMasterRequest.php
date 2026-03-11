@@ -24,7 +24,7 @@ class AssignMasterRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'master_id' => 'required|integer|exists:users,id',
+            'master_id' => 'required|integer|exists:users,id,role,master',
         ];
     }
 

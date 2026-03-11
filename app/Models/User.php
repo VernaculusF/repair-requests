@@ -1,10 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -22,6 +25,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
     ];
 
     /**
@@ -46,4 +50,29 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    /**
+     * Get repair requests assigned to this user (master only).
+     */
+    public function repairRequests(): HasMany
+    {
+        return $this->hasMany(RepairRequest::class, 'assigned_to');
+    }
+
+    /**
+     * Check if user is a dispatcher.
+     */
+    public function isDispatcher(): bool
+    {
+        return $this->role === 'dispatcher';
+    }
+
+    /**
+     * Check if user is a master.
+     */
+    public function isMaster(): bool
+    {
+        return $this->role === 'master';
+    }
 }
+

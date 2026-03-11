@@ -1,0 +1,36 @@
+.git
+.gitignore
+.dockerignore
+.env
+.env.*.local
+.env.docker
+LICENSE
+README.md
+DECISIONS.md
+BASICRULES.md
+PROMPTS.md
+TODO.md
+node_modules/
+npm-debug.log
+yarn-error.log
+tests/
+.phpunit.cache/
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Laravel
+bootstrap/cache/*
+storage/logs/*
+storage/framework/cache/*
+storage/framework/views/*
+
+# Composer
+vendor/
+composer.lock
+
+# Database
+database/database.sqlite

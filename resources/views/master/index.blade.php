@@ -1,204 +1,148 @@
 @extends('layouts.app')
 
-@push('styles')
-<style>
-.status-badge {
-    display: inline-block;
-    padding: 0.25rem 0.75rem;
-    border-radius: 20px;
-    font-weight: 600;
-    font-size: 0.85rem;
-}
-.status-badge--new        { background: #d1ecf1; color: #0c5460; }
-.status-badge--assigned   { background: #fff3cd; color: #856404; }
-.status-badge--in_progress { background: #d4edff; color: #004085; }
-.status-badge--done       { background: #d4edda; color: #155724; }
-.status-badge--canceled   { background: #f8d7da; color: #721c24; }
-</style>
-@endpush
+@section('title', 'My Requests — RepairHub')
 
 @section('content')
-    <h1 style="margin-bottom: 1.5rem;">My Repair Requests</h1>
+    <div class="page-header">
+        <div>
+            <h1>My Repair Requests</h1>
+            <p>View and manage requests assigned to you.</p>
+        </div>
+    </div>
+
+    {{-- Statistics --}}
+    @if ($requests->count())
+        <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr);">
+            <div class="stat-card">
+                <div class="stat-card__value" style="color: var(--warning);">{{ $stats['assigned'] }}</div>
+                <div class="stat-card__label">Waiting to Accept</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card__value" style="color: var(--primary);">{{ $stats['in_progress'] }}</div>
+                <div class="stat-card__label">In Progress</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card__value" style="color: var(--success);">{{ $stats['done'] }}</div>
+                <div class="stat-card__label">Completed</div>
+            </div>
+        </div>
+    @endif
 
     @if ($requests->count())
-        <div>
-            @foreach ($requests as $request)
-                <div style="
-                    background: white;
-                    border: 1px solid #e0e0e0;
-                    border-radius: 8px;
-                    padding: 1.5rem;
-                    margin-bottom: 1.5rem;
-                    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-                ">
-                    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem;">
-                        <!-- Left Column: Info -->
-                        <div>
-                            <div style="margin-bottom: 1rem;">
-                                <small style="color: #999;">Request ID</small><br>
-                                <strong style="font-size: 1.2rem;">#{{ $request->id }}</strong>
-                            </div>
-
-                            <div style="margin-bottom: 1rem;">
-                                <small style="color: #999;">Client</small><br>
-                                <strong>{{ $request->client_name }}</strong>
-                            </div>
-
-                            <div style="margin-bottom: 1rem;">
-                                <small style="color: #999;">Phone</small><br>
-                                <a href="tel:{{ $request->phone }}" style="color: #2c3e50; text-decoration: none;">
-                                    {{ $request->phone }}
-                                </a>
-                            </div>
-
-                            <div style="margin-bottom: 1rem;">
-                                <small style="color: #999;">Address</small><br>
-                                <strong>{{ $request->address }}</strong>
-                            </div>
-
-                            <div style="margin-bottom: 1rem;">
-                                <small style="color: #999;">Status</small><br>
-                                <span class="status-badge status-badge--{{ $request->status->value }}">
-                                    {{ $request->status->label() }}
-                                </span>
-                            </div>
-
-                            <div style="margin-bottom: 1rem;">
-                                <small style="color: #999;">Created</small><br>
-                                <strong>{{ $request->created_at->format('Y-m-d H:i') }}</strong>
+        @foreach ($requests as $request)
+            <div class="request-card">
+                <div class="request-card__body">
+                    {{-- Left Column: Info --}}
+                    <div>
+                        <div class="request-card__info-item">
+                            <div class="request-card__info-label">Request ID</div>
+                            <div class="request-card__info-value" style="font-size: 1.25rem; color: var(--primary);">
+                                #{{ $request->id }}
                             </div>
                         </div>
 
-                        <!-- Right Column: Problem & Actions -->
-                        <div>
-                            <div style="margin-bottom: 1.5rem;">
-                                <small style="color: #999; display: block; margin-bottom: 0.5rem;">Problem Description</small>
-                                <p style="
-                                    background: #f8f9fa;
-                                    padding: 1rem;
-                                    border-radius: 4px;
-                                    border-left: 4px solid #2c3e50;
-                                    margin: 0;
-                                    line-height: 1.6;
-                                ">
-                                    {{ $request->problem_text }}
-                                </p>
+                        <div class="request-card__info-item">
+                            <div class="request-card__info-label">Client</div>
+                            <div class="request-card__info-value">{{ $request->client_name }}</div>
+                        </div>
+
+                        <div class="request-card__info-item">
+                            <div class="request-card__info-label">Phone</div>
+                            <div class="request-card__info-value">
+                                <a href="tel:{{ $request->phone }}">{{ $request->phone }}</a>
                             </div>
+                        </div>
 
-                            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-                                {{-- Take Button --}}
-                                @if ($request->status === \App\Enums\RequestStatus::Assigned)
-                                    <form method="POST" action="/master/requests/{{ $request->id }}/take" style="display: inline;">
-                                        @csrf
-                                        <button
-                                            type="submit"
-                                            style="
-                                                padding: 0.75rem 1.5rem;
-                                                background: #17a2b8;
-                                                color: white;
-                                                border: none;
-                                                border-radius: 4px;
-                                                cursor: pointer;
-                                                font-weight: 600;
-                                                transition: background 0.3s;
-                                            "
-                                            onmouseover="this.style.background='#138496'"
-                                            onmouseout="this.style.background='#17a2b8'"
-                                        >
-                                            Accept Request
-                                        </button>
-                                    </form>
-                                @endif
+                        <div class="request-card__info-item">
+                            <div class="request-card__info-label">Address</div>
+                            <div class="request-card__info-value">{{ $request->address }}</div>
+                        </div>
 
-                                {{-- Complete Button --}}
-                                @if ($request->status === \App\Enums\RequestStatus::InProgress)
-                                    <form method="POST" action="/master/requests/{{ $request->id }}/complete" style="display: inline;">
-                                        @csrf
-                                        <button
-                                            type="submit"
-                                            style="
-                                                padding: 0.75rem 1.5rem;
-                                                background: #28a745;
-                                                color: white;
-                                                border: none;
-                                                border-radius: 4px;
-                                                cursor: pointer;
-                                                font-weight: 600;
-                                                transition: background 0.3s;
-                                            "
-                                            onmouseover="this.style.background='#218838'"
-                                            onmouseout="this.style.background='#28a745'"
-                                        >
-                                            Mark as Complete
-                                        </button>
-                                    </form>
-                                @endif
+                        <div class="request-card__info-item">
+                            <div class="request-card__info-label">Status</div>
+                            <span class="badge badge--{{ $request->status->value }}">
+                                {{ $request->status->label() }}
+                            </span>
+                        </div>
 
-                                {{-- Status Badge --}}
-                                @if ($request->status === \App\Enums\RequestStatus::Done)
-                                    <div style="
-                                        padding: 0.75rem 1.5rem;
-                                        background: #d4edda;
-                                        color: #155724;
-                                        border-radius: 4px;
-                                        font-weight: 600;
-                                    ">
-                                        ✓ Completed
-                                    </div>
-                                @endif
-                            </div>
+                        <div class="request-card__info-item">
+                            <div class="request-card__info-label">Created</div>
+                            <div class="request-card__info-value text-sm">{{ $request->created_at->format('d M Y, H:i') }}</div>
                         </div>
                     </div>
 
-                    {{-- Event History (if available) --}}
-                    @if ($request->events->count())
-                        <div style="
-                            margin-top: 1.5rem;
-                            padding-top: 1.5rem;
-                            border-top: 1px solid #e0e0e0;
-                        ">
-                            <details style="cursor: pointer;">
-                                <summary style="font-weight: 600; color: #2c3e50;">
-                                    Event History ({{ $request->events->count() }})
-                                </summary>
-                                <div style="margin-top: 1rem; background: #f8f9fa; padding: 1rem; border-radius: 4px;">
-                                    @foreach ($request->events as $event)
-                                        <div style="padding: 0.5rem 0; border-bottom: 1px solid #e0e0e0;">
-                                            <strong>{{ $event->action }}</strong><br>
-                                            <small style="color: #666;">
-                                                {{ $event->created_at->format('Y-m-d H:i:s') }}
-                                                @if ($event->user)
-                                                    by {{ $event->user->email }}
-                                                @else
-                                                    by System
-                                                @endif
-                                            </small>
-                                            @if ($event->comment)
-                                                <p style="margin-top: 0.25rem; color: #666;">{{ $event->comment }}</p>
-                                            @endif
-                                        </div>
-                                    @endforeach
-                                </div>
-                            </details>
+                    {{-- Right Column: Problem & Actions --}}
+                    <div>
+                        <div class="request-card__info-label mb-2">Problem Description</div>
+                        <div class="request-card__problem">
+                            {{ $request->problem_text }}
                         </div>
-                    @endif
-                </div>
-            @endforeach
-        </div>
 
-        <!-- Pagination -->
-        <div style="margin-top: 1.5rem;">
+                        <div class="request-card__actions">
+                            @if ($request->status === \App\Enums\RequestStatus::Assigned)
+                                <form method="POST" action="{{ route('master.take', $request) }}" class="inline-form">
+                                    @csrf
+                                    <button type="submit" class="btn btn--accent btn--lg">
+                                        Accept Request
+                                    </button>
+                                </form>
+                            @endif
+
+                            @if ($request->status === \App\Enums\RequestStatus::InProgress)
+                                <form method="POST" action="{{ route('master.complete', $request) }}" class="inline-form">
+                                    @csrf
+                                    <button type="submit" class="btn btn--success btn--lg">
+                                        Mark as Complete
+                                    </button>
+                                </form>
+                            @endif
+
+                            @if ($request->status === \App\Enums\RequestStatus::Done)
+                                <div class="request-card__completed">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                    Completed
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Event History --}}
+                @if ($request->events->count())
+                    <div class="event-history">
+                        <details>
+                            <summary>Event History ({{ $request->events->count() }})</summary>
+                            <div class="event-timeline">
+                                @foreach ($request->events as $event)
+                                    <div class="event-timeline__item">
+                                        <div class="event-timeline__action">{{ ucfirst($event->action) }}</div>
+                                        <div class="event-timeline__meta">
+                                            {{ $event->created_at->format('d M Y, H:i:s') }}
+                                            &middot;
+                                            {{ $event->user ? $event->user->email : 'System' }}
+                                        </div>
+                                        @if ($event->comment)
+                                            <div class="event-timeline__comment">{{ $event->comment }}</div>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                        </details>
+                    </div>
+                @endif
+            </div>
+        @endforeach
+
+        <div class="pagination-wrapper">
             {{ $requests->links() }}
         </div>
     @else
-        <div style="
-            background: #f8f9fa;
-            padding: 2rem;
-            border-radius: 8px;
-            text-align: center;
-            color: #666;
-        ">
-            <p>You have no assigned repair requests at the moment.</p>
+        <div class="content-card">
+            <div class="empty-state">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                <p><strong>No assigned requests yet.</strong></p>
+                <p class="text-sm text-muted">When a dispatcher assigns a request to you, it will appear here.</p>
+            </div>
         </div>
     @endif
 @endsection

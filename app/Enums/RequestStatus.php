@@ -14,7 +14,7 @@ enum RequestStatus: string
 
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::New => 'New',
             self::Assigned => 'Assigned',
             self::InProgress => 'In Progress',
@@ -25,7 +25,7 @@ enum RequestStatus: string
 
     public function color(): string
     {
-        return match($this) {
+        return match ($this) {
             self::New => 'badge-info',
             self::Assigned => 'badge-warning',
             self::InProgress => 'badge-primary',
@@ -36,7 +36,7 @@ enum RequestStatus: string
 
     public function badgeBackground(): string
     {
-        return match($this) {
+        return match ($this) {
             self::New => '#d1ecf1',
             self::Assigned => '#fff3cd',
             self::InProgress => '#d4edff',
@@ -47,7 +47,7 @@ enum RequestStatus: string
 
     public function badgeColor(): string
     {
-        return match($this) {
+        return match ($this) {
             self::New => '#0c5460',
             self::Assigned => '#856404',
             self::InProgress => '#004085',

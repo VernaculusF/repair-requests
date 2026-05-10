@@ -24,7 +24,7 @@ return new class extends Migration
             $table->string('new_status')->nullable();
             $table->text('comment')->nullable();
             $table->timestamps();
-            
+
             $table->index('repair_request_id');
             $table->index('created_at');
         });

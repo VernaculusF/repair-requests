@@ -30,18 +30,26 @@ class RequestController extends Controller
 
         if ($status) {
             try {
-                $status = RequestStatus::from($status);
-                $query = $query->byStatus($status);
+                $statusEnum = RequestStatus::from($status);
+                $query = $query->byStatus($statusEnum);
             } catch (\ValueError) {
                 // Invalid status, ignore filter
             }
         }
 
-        $requests = $query->paginate(15);
+        $requests = $query->latest()->paginate(15);
         $masters = User::where('role', 'master')->get();
         $statuses = RequestStatus::cases();
 
-        return view('dispatcher.index', compact('requests', 'masters', 'statuses'));
+        $stats = [
+            'total' => RepairRequest::count(),
+            'new' => RepairRequest::where('status', RequestStatus::New)->count(),
+            'assigned' => RepairRequest::where('status', RequestStatus::Assigned)->count(),
+            'in_progress' => RepairRequest::where('status', RequestStatus::InProgress)->count(),
+            'done' => RepairRequest::where('status', RequestStatus::Done)->count(),
+        ];
+
+        return view('dispatcher.index', compact('requests', 'masters', 'statuses', 'stats'));
     }
 
     /**

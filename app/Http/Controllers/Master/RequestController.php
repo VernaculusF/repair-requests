@@ -27,11 +27,20 @@ class RequestController extends Controller
         $masterId = Auth::id();
 
         $requests = RepairRequest::where('assigned_to', $masterId)
-            ->with('events')
-            ->orderBy('created_at', 'desc')
+            ->with(['events', 'events.user'])
+            ->latest()
             ->paginate(15);
 
-        return view('master.index', compact('requests'));
+        $stats = [
+            'assigned' => RepairRequest::where('assigned_to', $masterId)
+                ->where('status', RequestStatus::Assigned)->count(),
+            'in_progress' => RepairRequest::where('assigned_to', $masterId)
+                ->where('status', RequestStatus::InProgress)->count(),
+            'done' => RepairRequest::where('assigned_to', $masterId)
+                ->where('status', RequestStatus::Done)->count(),
+        ];
+
+        return view('master.index', compact('requests', 'stats'));
     }
 
     /**

@@ -6,8 +6,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreRepairRequestRequest;
 use App\Services\RepairRequestService;
-use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
 
 class RepairRequestController extends Controller
 {

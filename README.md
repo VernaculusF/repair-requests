@@ -1,192 +1,133 @@
-# Repair Requests Web Application
+# RepairHub — Repair Request Management System
 
-A Laravel 12 web application for managing repair service requests with role-based access control (dispatcher and master roles).
+A modern Laravel 12 web application for managing repair service requests with role-based access control, audit logging, and race condition protection.
 
 ## Features
 
-- **Public Request Submission**: Any user can submit a repair request without authentication
-- **Dispatcher Panel**: Dispatchers can view all requests, filter by status, assign to masters, and cancel requests
-- **Master Panel**: Masters can view requests assigned to them, accept requests, and mark them as completed
-- **Race Condition Protection**: The "Take" action uses atomic database updates to safely handle concurrent requests
-- **Audit Logging**: All actions are logged with timestamps and user information (bonus feature)
+- **Public Request Submission** — anyone can submit a repair request without registration
+- **Dispatcher Dashboard** — view all requests with statistics, filter by status, assign to masters, cancel requests
+- **Master Panel** — accept assigned requests, track progress, mark as completed
+- **Race Condition Protection** — atomic database updates prevent concurrent "take" conflicts
+- **Audit Logging** — all status changes are recorded with timestamps and user info
+- **Responsive Design** — modern UI that works on desktop and mobile
 
-## Technology Stack
+## Tech Stack
 
-- **Framework**: Laravel 12
-- **Language**: PHP 8.2
-- **Database**: MySQL 8.0 (Docker) or SQLite (testing/local)
-- **Web Server**: Nginx (Docker) / Laravel Artisan (local)
-- **Containerization**: Docker Compose
+| Component | Technology |
+|-----------|-----------|
+| Framework | Laravel 12 |
+| Language | PHP 8.2+ |
+| Database | MySQL 8.0 (Docker) / SQLite (local/testing) |
+| Web Server | Nginx (Docker) / Artisan (local) |
+| Containerization | Docker Compose |
 
-## Local Setup (Without Docker)
+## Quick Start (Local)
 
-### Prerequisites
-- PHP 8.2+ with extensions: pdo, pdo_sqlite, mbstring, json, bcmath, fileinfo, curl
-- Composer
-- SQLite (built-in, no installation needed)
+```bash
+# Install dependencies
+composer install --ignore-platform-reqs
 
-### Installation Steps
+# Configure environment
+cp .env.example .env
 
-1. **Clone or download the project**
-   ```bash
-   cd repair-requests
-   ```
+# Generate app key
+php artisan key:generate
 
-2. **Install dependencies**
-   ```bash
-   composer install --ignore-platform-reqs
-   ```
+# Run migrations with seed data
+php artisan migrate --seed
 
-3. **Configure environment**
-   ```bash
-   cp .env.example .env
-   # .env is already configured to use SQLite
-   ```
+# Start dev server
+php artisan serve
+```
 
-4. **Generate application key**
-   ```bash
-   php artisan key:generate
-   ```
+Open [http://localhost:8000](http://localhost:8000)
 
-5. **Run migrations**
-   ```bash
-   php artisan migrate --seed
-   ```
+## Docker Setup
 
-6. **Start development server**
-   ```bash
-   php artisan serve
-   ```
+See [DOCKER_SETUP.md](DOCKER_SETUP.md) for Docker Compose instructions.
 
-   Application will be available at `http://localhost:8000`
+```bash
+cp .env.docker .env
+docker compose up -d
+docker compose exec app php artisan migrate --seed
+```
 
-## Docker Setup (Recommended)
+Open [http://localhost](http://localhost)
 
-See [DOCKER_SETUP.md](DOCKER_SETUP.md) for complete Docker Compose installation and usage instructions.
+## Demo Credentials
 
-## Test Credentials
-
-All test users have password: **`password`**
-
-| Email | Role | Purpose |
-|-------|------|---------|
-| `dispatcher@example.com` | Dispatcher | Manage and assign requests |
-| `master1@example.com` | Master | Work on assigned requests |
-| `master2@example.com` | Master | Work on assigned requests |
+| Role | Email | Password |
+|------|-------|----------|
+| Dispatcher | `dispatcher@example.com` | `password` |
+| Master | `master1@example.com` | `password` |
+| Master | `master2@example.com` | `password` |
 
 ## Application Workflow
 
-### 1. Submit Request (Public)
-- Navigate to `/requests/create`
-- Fill in: client name, phone, address, problem description
-- System creates request with status `new`
-
-### 2. Dispatcher Assigns Request
-- Login as dispatcher@example.com
-- Go to `/dispatcher`
-- View all requests, filter by status
-- Select a master and click "Assign" to change status to `assigned`
-- Click "Cancel" to mark request as `canceled`
-
-### 3. Master Accepts and Completes
-- Login as master1@example.com or master2@example.com
-- Go to `/master`
-- Click "Accept Request" to change status from `assigned` to `in_progress`
-- Click "Mark as Complete" to change status from `in_progress` to `done`
-
-## Race Condition Testing
-
-The "Take" (Accept) action demonstrates race condition protection. When a master clicks "Accept Request", the system uses an atomic database UPDATE to ensure only one master can take the request.
-
-### Running Automated Tests
-
-```bash
-php artisan test
 ```
+[Client] → Submit Request (public form)
+              ↓
+[Status: NEW] → Dispatcher assigns a master
+              ↓
+[Status: ASSIGNED] → Master accepts the request
+              ↓
+[Status: IN_PROGRESS] → Master completes the work
+              ↓
+[Status: DONE]
 
-Tests use in-memory SQLite database and cover both successful submissions and race condition scenarios.
-
-### Manual Test with curl
-
-See [race_test.sh](race_test.sh) for an automated testing script, or test manually:
-
-```bash
-# Get session cookie
-curl -c cookies.txt -X POST http://localhost/login \
-  -d "email=master1@example.com&password=password&_token=<CSRF_TOKEN>"
-
-# First take (should succeed)
-curl -b cookies.txt -X POST http://localhost/master/requests/1/take -L
-
-# Second take (should get error)
-curl -b cookies.txt -X POST http://localhost/master/requests/1/take -L
+At any point (before DONE): Dispatcher can cancel → [Status: CANCELED]
 ```
-
-**Expected Result:**
-- First request: Status changes to `in_progress` (200 with success message)
-- Second request: Error "This request is already being worked on." (302 redirect with error flash)
 
 ## Running Tests
 
-Tests use SQLite in-memory database for speed and isolation.
-
 ```bash
+# Run all tests (uses in-memory SQLite)
 php artisan test
+
+# Run specific test suites
+php artisan test --filter=CreateRepairRequestTest
+php artisan test --filter=RaceConditionTest
 ```
-
-### Available Tests
-
-- `CreateRepairRequestTest`: Validation and successful submission of repair requests
-- `RaceConditionTest`: Concurrent "Take" action protection
 
 ## Project Structure
 
 ```
 app/
-  Enums/RequestStatus.php
-  Exceptions/RequestAlreadyTakenException.php
-  Http/Controllers/
-    Auth/LoginController.php
-    RepairRequestController.php
-    Dispatcher/RequestController.php
-    Master/RequestController.php
-  Http/Middleware/EnsureRole.php
-  Http/Requests/
-    StoreRepairRequestRequest.php
-    AssignMasterRequest.php
-  Models/
-    User.php
-    RepairRequest.php
-    RequestEvent.php
-  Services/RepairRequestService.php
+├── Enums/RequestStatus.php          # Status enum with labels and colors
+├── Exceptions/                      # Custom exceptions (race condition)
+├── Http/
+│   ├── Controllers/
+│   │   ├── Auth/LoginController.php # Authentication
+│   │   ├── RepairRequestController.php  # Public request form
+│   │   ├── Dispatcher/RequestController.php  # Dispatcher panel
+│   │   └── Master/RequestController.php      # Master panel
+│   ├── Middleware/EnsureRole.php     # Role-based access
+│   └── Requests/                    # Form validation
+├── Models/                          # Eloquent models
+└── Services/
+    ├── RepairRequestService.php     # Business logic
+    └── AuditService.php             # Event logging
 
 database/
-  migrations/
-  factories/
-  seeders/
+├── migrations/                      # DB schema
+├── factories/                       # Test data factories
+└── seeders/                         # Demo data seeder
 
 resources/views/
-  layouts/app.blade.php
-  auth/login.blade.php
-  requests/
-  dispatcher/
-  master/
-
-routes/web.php
+├── layouts/app.blade.php            # Main layout with design system
+├── welcome.blade.php                # Landing page
+├── auth/login.blade.php             # Login form
+├── requests/                        # Public request views
+├── dispatcher/                      # Dispatcher dashboard
+└── master/                          # Master panel
 ```
 
 ## Key Design Decisions
 
-See [DECISIONS.md](DECISIONS.md) for detailed architectural decisions and rationale.
+See [DECISIONS.md](DECISIONS.md) for detailed architectural rationale.
 
-## Bonus Features
-
-- ✅ Audit log system (request events with timestamps and user tracking)
-- ✅ race_test.sh script for manual race condition testing  
-- ✅ Docker Compose for production-ready deployment
-- ✅ Atomic UPDATE protection against race conditions
-- ✅ Clean git history with atomic commits per feature
-
-## License
-
-MIT License
+- **Atomic UPDATE for race protection** — single conditional UPDATE ensures only one master can "take" a request
+- **Service layer** — business logic separated from controllers for testability
+- **PHP 8.1+ enums** — type-safe status values with helper methods
+- **Eager loading** — `with()` on listing pages prevents N+1 queries
+- **Audit events table** — immutable event rows for full request history

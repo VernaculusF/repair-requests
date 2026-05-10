@@ -1,22 +1,22 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
-use App\Http\Controllers\RepairRequestController;
 use App\Http\Controllers\Dispatcher\RequestController as DispatcherRequestController;
 use App\Http\Controllers\Master\RequestController as MasterRequestController;
+use App\Http\Controllers\RepairRequestController;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    if (!auth()->check()) {
-        return redirect('/login');
+    if (! auth()->check()) {
+        return view('welcome');
     }
 
     return match (auth()->user()->role) {
-        'dispatcher' => redirect('/dispatcher'),
-        'master' => redirect('/master'),
-        default => redirect('/login'),
+        'dispatcher' => redirect()->route('dispatcher.index'),
+        'master' => redirect()->route('master.index'),
+        default => view('welcome'),
     };
-});
+})->name('home');
 
 // Authentication routes
 Route::get('/login', [LoginController::class, 'showForm'])->name('login')->middleware('guest');

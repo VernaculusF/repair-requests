@@ -65,7 +65,7 @@ class RepairRequest extends Model
      */
     public function scopeByStatus($query, ?RequestStatus $status)
     {
-        if (!$status) {
+        if (! $status) {
             return $query;
         }
 
